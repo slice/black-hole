@@ -41,11 +41,12 @@ class XMPP:
     def join_rooms(self):
         """Joins all rooms as configured in the confuguration file.
 
-        This is automatically called when we connt to XMPP through
+        This is automatically called when we connect to XMPP through
         :meth:`boot_xmpp`.
         """
         rooms = self.config['rooms']
         for room_config in rooms:
+            # Room needs a reference to self in order to call _handle_message
             room = Room(self, config=room_config)
             room.join(self.muc)
 

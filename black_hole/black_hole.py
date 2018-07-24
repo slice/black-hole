@@ -9,6 +9,11 @@ log = logging.getLogger(__name__)
 
 
 class BlackHole:
+    """
+    The main class that boots up an XMPP client and a Discord client, and handles
+    message passing between the two.
+    """
+
     def __init__(self, *, config):
         self.config = config
 

@@ -10,6 +10,11 @@ log = logging.getLogger(__name__)
 
 
 class Discord:
+    """
+    A wrapper around a Discord client that mirrors XMPP messages to a room's
+    configured webhook.
+    """
+
     def __init__(self, *, config):
         self.config = config
         self.client = discord.Client()
