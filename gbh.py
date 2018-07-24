@@ -86,7 +86,10 @@ class GajimboBH:
         nick = member.nick
         content = msg.body.lookup(self.selectors)
 
-        self.loop.create_task(self._bridge(nick, content))
+        if self.config.get('muc', {}).get('log', False):
+            log.info('<%s> %s', member.direct_jid, content)
+
+        self.loop.create_task(self._bridge(member, content))
 
     def _join_mucs(self):
         muc = self.client.summon(aioxmpp.MUCClient)
