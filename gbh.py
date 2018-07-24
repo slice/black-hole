@@ -51,6 +51,18 @@ class GajimboBH:
             self._version_xso_handler,
         )
 
+    def resolve_avatar(self, nick):
+        mappings = self.config['discord'].get('mappings', {})
+        user_id = mappings.get(nick)
+        if user_id:
+            user = self.discord.get_user(user_id)
+        else:
+            user = discord.utils.get(self.discord.users, name=nick)
+
+        if not user:
+            return None
+        return user.avatar_url_as(format='png')
+
     def _clean_content(self, content):
         return content \
             .replace('@everyone', '@\u200beveryone') \
@@ -62,6 +74,7 @@ class GajimboBH:
         payload = {
             'username': nick,
             'content': self._clean_content(content),
+            'avatar_url': self.resolve_avatar(nick),
         }
 
         try:
