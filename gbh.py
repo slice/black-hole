@@ -51,16 +51,14 @@ class GajimboBH:
             self._version_xso_handler,
         )
 
-    def resolve_avatar(self, nick):
+    def resolve_avatar(self, member):
         mappings = self.config['discord'].get('mappings', {})
-        user_id = mappings.get(nick)
-        if user_id:
-            user = self.discord.get_user(user_id)
-        else:
-            user = discord.utils.get(self.discord.users, name=nick)
+        user_id = mappings.get(str(member.direct_jid))
+        user = self.discord.get_user(user_id)
 
         if not user:
             return None
+
         return user.avatar_url_as(format='png')
 
     def _clean_content(self, content):
@@ -69,12 +67,14 @@ class GajimboBH:
             .replace('@here', '@\u200bhere') \
             .replace('<@', '<\u200b@')
 
-    async def _bridge(self, nick, content):
+    async def _bridge(self, member, content):
+        nick = member.nick
+
         url = self.config['discord']['webhook']
         payload = {
             'username': nick,
             'content': self._clean_content(content),
-            'avatar_url': self.resolve_avatar(nick),
+            'avatar_url': self.resolve_avatar(member),
         }
 
         try:
@@ -83,7 +83,6 @@ class GajimboBH:
             log.exception('failed to bridge content')
 
     def _on_muc_message(self, msg, member, source, **kwargs):
-        nick = member.nick
         content = msg.body.lookup(self.selectors)
 
         if self.config.get('muc', {}).get('log', False):
