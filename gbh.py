@@ -1,9 +1,10 @@
 import asyncio
 import logging
 import sys
-import aiohttp
 
+import aiohttp
 import aioxmpp
+import discord
 import toml
 
 logging.basicConfig(level='INFO')
@@ -13,13 +14,17 @@ log = logging.getLogger('gajimbo.black-hole')
 class GajimboBH:
     def __init__(self, jid, password, *, loop, config={}):
         self.loop = loop
-        self.session = aiohttp.ClientSession(loop=loop)
         self.config = config
+
         self.jid = aioxmpp.JID.fromstr(jid)
         self.password = password
+
         self.selectors = [
             aioxmpp.structs.LanguageRange.fromstr('*'),
         ]
+
+        self.session = aiohttp.ClientSession(loop=loop)
+        self.discord = discord.Client()
         self.client = aioxmpp.PresenceManagedClient(
             self.jid,
             aioxmpp.make_security_layer(password, no_verify=True),
@@ -53,7 +58,7 @@ class GajimboBH:
             .replace('<@', '<\u200b@')
 
     async def _bridge(self, nick, content):
-        url = self.config['bridge']['webhook']
+        url = self.config['discord']['webhook']
         payload = {
             'username': nick,
             'content': self._clean_content(content),
@@ -99,7 +104,12 @@ class GajimboBH:
             'absorbing matter',
         )
 
-    async def _run(self):
+    async def _boot_discord(self):
+        log.info('connecting to discord...')
+        await self.discord.start(self.config['discord']['token'])
+
+    async def _boot_xmpp(self):
+        log.info('connecting to xmpp...')
         async with self.client.connected() as stream:
             log.info('obtained stream: %s', stream)
             self._register()
@@ -110,7 +120,18 @@ class GajimboBH:
                 await asyncio.sleep(60)
 
     def run(self):
-        self.loop.run_until_complete(self._run())
+        log.info('booting services')
+        self.loop.create_task(self._boot_xmpp())
+        self.loop.create_task(self._boot_discord())
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            log.info('*** stopping ***')
+            self.client.stop()
+            self.loop.run_until_complete(self.discord.logout())
+        finally:
+            self.loop.close()
+        log.info('run() exit')
 
 
 if __name__ == '__main__':
