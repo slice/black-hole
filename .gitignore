@@ -1,4 +1,6 @@
-.DS_Store
+/config.yaml
+
 __pycache__
 *.pyc
-/config.toml
+
+.DS_Store
