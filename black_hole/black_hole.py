@@ -32,7 +32,7 @@ class BlackHole:
             config=config
         )
 
-        self.discord.client.add_on_message(self.on_discord_message)
+        self.discord.client.add_listener(self.on_discord_message, 'on_message')
 
     async def on_message(self, room, msg, member, source):
         """Called when a message in a MUC room is sent."""
@@ -40,9 +40,7 @@ class BlackHole:
         await self.discord.bridge(room, msg, member, source)
 
     async def on_discord_message(self, message):
-        """Called when a message in a discord"""
-        # ignore messages from webhooks (which are very probably ourselves),
-        # but not from bots
+        # ignore messages from webhooks
         if message.webhook_id is not None:
             return
 

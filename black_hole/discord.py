@@ -2,24 +2,12 @@ import logging
 
 import aiohttp
 import discord
+from discord.ext import commands
 
 from .utils import clean_content
 
 __all__ = ['Discord']
 log = logging.getLogger(__name__)
-
-
-class DiscordClient(discord.Client):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.message_handlers = []
-
-    def add_on_message(self, callback):
-        self.message_handlers.append(callback)
-
-    async def on_message(self, message):
-        for handler in self.message_handlers:
-            await handler(message)
 
 
 class Discord:
@@ -30,7 +18,8 @@ class Discord:
 
     def __init__(self, *, config):
         self.config = config
-        self.client = DiscordClient()
+        self.client = commands.Bot(command_prefix=commands.when_mentioned)
+        self.client.remove_command('help')
         self.session = aiohttp.ClientSession(loop=self.client.loop)
 
     def resolve_avatar(self, member):
