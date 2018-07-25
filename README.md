@@ -53,3 +53,13 @@ discord:
     'user_a@xmpp.server': 123
     'user_b@xmpp.server': 456
 ```
+
+## Documentation
+
+### Message Transport
+
+Webhooks are used to transfer messages from the MUC to Discord. The Discord bot
+listens for messages in the specified channel and transfers them to the MUC.
+
+We use a webhook because it allows us to customize the "author" and avatar of
+the posted message, which makes mirrored messages easier to read.
