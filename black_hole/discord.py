@@ -4,6 +4,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from .management import Management
 from .utils import clean_content
 
 __all__ = ['Discord']
@@ -19,6 +20,7 @@ class Discord:
     def __init__(self, *, config):
         self.config = config
         self.client = commands.Bot(command_prefix=commands.when_mentioned)
+        self.client.add_cog(Management(self.client, self.config))
         self.session = aiohttp.ClientSession(loop=self.client.loop)
 
     def resolve_avatar(self, member):

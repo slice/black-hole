@@ -52,6 +52,12 @@ discord:
   # Discord bot token, used to receive messages.
   token: 'NDU...'
 
+  # A list of Discord user IDs that will be able to manage the bot from
+  # Discord.
+  managers:
+    - 123
+    - 456
+
   # A map of JIDs to Discord user IDs.
   #
   # Allows black-hole to specify the avatar URL of a JID's associated Discord
@@ -81,3 +87,26 @@ clunky due to the way the XEP works.
 [XEP-0308]: https://xmpp.org/extensions/xep-0308.html
 
 Any edits made on the MUC are not reflected on Discord.
+
+### JID Map
+
+The JID map allows the XMPP → Discord functionality to resolve the user's
+avatar to be displayed through the webhook. It can be managed manually through
+the config file or through the Discord bot.
+
+#### Discord Management
+
+Use these commands to manage the JID map from Discord:
+
+```
+# Map a JID to a Discord user. You can provide the user ID, mention, or a username.
+@bot jid set <jid> <user>
+
+# Deletes a JID from the JID map.
+@bot jid del <jid>
+
+# Shows the entire JID map.
+@bot jid show
+```
+
+The `set` and `del` commands automatically save changes.
