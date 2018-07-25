@@ -20,25 +20,26 @@ xmpp:
 # channel. They are linked together with a Discord bot, a Discord webhook,
 # and a XMPP client.
 rooms:
-  - jid: 'general@muc.xmpp.server' # The JID of the MUC itself.
+  - jid: 'general@muc.xmpp.server' # The JID of the MUC.
+
+    # The MUC's password. Omit if password-less.
+    # password: 'spicy ramen'
 
     # The nickname to use when joining the MUC.
     nick: 'black hole'
 
-    # The webhook URL to post to.
-    # This webhook should be on the same channel as the channel specified in
-    # `channel_id`.
+    # The webhook URL to post to. (MUC → Discord)
     webhook: 'https://discordapp.com/api/webhooks/...'
 
-    # The linked Discord channel. This won't be used to mirror messages from
-    # the MUC. Instead, it will be used to receive messages being sent in this
-    # channel and mirror them to the MUC.
+    # The Discord channel's ID. (Discord → MUC)
     channel_id: 123456789012345678
 
-    # Log any message sent in the MUC to stdout.
+    # NOTE: The webhook should be pointing to the same channel as channel_id.
+
+    # Log any message sent in the MUC to standard out.
     # log: true
 
-    # Log any message sent in the linked Discord channel to stdout.
+    # Log any message sent in the linked Discord channel to standard out.
     # discord_log: true
 discord:
   # Discord bot token, used to receive messages.

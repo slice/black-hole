@@ -39,8 +39,9 @@ class Room:
         """Joins this room from a :class:`aioxmpp.MUCClient` using the configuration."""
 
         room, _future = muc.join(
-            aioxmpp.JID.fromstr(self.config['jid']),
-            self.config.get('nick', 'black-hole'),
+            mucjid=aioxmpp.JID.fromstr(self.config['jid']),
+            nick=self.config.get('nick', 'black-hole'),
+            password=self.config.get('password'),
             history=aioxmpp.muc.xso.History(maxstanzas=0),
         )
 
