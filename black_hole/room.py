@@ -1,9 +1,10 @@
+__all__ = ['Room']
+
 import asyncio
 import logging
 
 import aioxmpp
 
-__all__ = ['Room']
 log = logging.getLogger(__name__)
 
 
@@ -20,7 +21,6 @@ class Room:
         pass
 
     def _on_message(self, msg, member, source, **kwargs):
-        # ignore ourselves to prevent infinite loops
         if member == self.room.me:
             return
 
@@ -29,7 +29,7 @@ class Room:
         if self.config.get('log', False):
             log.info('[%s] <%s> %s', self.config['jid'], member.direct_jid, content)
 
-        # sent the message over to our parent XMPP class
+        # Sent the message over to our parent XMPP class.
         self.loop.create_task(
             self.xmpp._handle_message(self, msg, member, source)
         )

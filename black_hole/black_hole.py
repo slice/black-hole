@@ -1,17 +1,17 @@
+__all__ = ['BlackHole']
+
 import asyncio
 import logging
 
 from .xmpp import XMPP
 from .discord import Discord
 
-__all__ = ['BlackHole']
 log = logging.getLogger(__name__)
 
 
 class BlackHole:
-    """
-    The main class that boots up an XMPP client and a Discord client, and handles
-    message passing between the two.
+    """The main class that boots up an XMPP client and a Discord client,
+    and handles message passing between the two.
     """
 
     def __init__(self, *, config):
@@ -25,7 +25,7 @@ class BlackHole:
             config=config,
         )
 
-        # register an event handler when we get a message from MUC rooms
+        # Register an event handler when we get a message from MUCs.
         self.xmpp.on_message(self.on_message)
 
         self.discord = Discord(
@@ -33,15 +33,15 @@ class BlackHole:
         )
 
         self.discord.client.add_listener(self.on_discord_message, 'on_message')
-        self.discord.client.add_listener(self.on_discord_message_edit, 'on_message_edit')
+        self.discord.client.add_listener(self.on_discord_message_edit,
+                                         'on_message_edit')
 
     async def on_message(self, room, msg, member, source):
-        """Called when a message in a MUC room is sent."""
-        # directly bridge everything to discord
+        """Bridge a MUC message to its Discord channel."""
         await self.discord.bridge(room, msg, member, source)
 
     async def on_discord_message(self, message):
-        # ignore messages from webhooks
+        """Bridge a Discord message to its MUC."""
         if message.webhook_id is not None:
             return
 
@@ -52,7 +52,8 @@ class BlackHole:
             return
 
         if before.system_content == after.system_content:
-            # edited in ways we don't care about
+            # This message was edited in ways we don't care about, so let's not
+            # bother.
             return
 
         await self.xmpp.bridge(self.discord.client, after, edited=True)

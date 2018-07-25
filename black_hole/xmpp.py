@@ -1,3 +1,5 @@
+__all__ = ['XMPP']
+
 import asyncio
 import logging
 from collections import namedtuple
@@ -8,7 +10,6 @@ from discord.ext.commands import clean_content
 
 from .room import Room
 
-__all__ = ['XMPP']
 log = logging.getLogger(__name__)
 
 FakeContext = namedtuple('FakeContext', (

@@ -1,19 +1,18 @@
+__all__ = ['Discord']
+
 import logging
 
 import aiohttp
-import discord
 from discord.ext import commands
 
 from .management import Management
 from .utils import clean_content
 
-__all__ = ['Discord']
 log = logging.getLogger(__name__)
 
 
 class Discord:
-    """
-    A wrapper around a Discord client that mirrors XMPP messages to a room's
+    """A wrapper around a Discord client that mirrors XMPP messages to a room's
     configured webhook.
     """
 
