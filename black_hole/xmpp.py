@@ -3,6 +3,7 @@ import logging
 from collections import namedtuple
 
 import aioxmpp
+import discord
 from discord.ext.commands import clean_content
 
 from .room import Room
@@ -69,24 +70,24 @@ class XMPP:
 
     async def bridge(self, client, message):
         """Take a discord message and send it over to the MUC."""
-        rooms = self.config['rooms']
+        room = discord.utils.find(
+            lambda room: room['channel_id'] == message.channel.id,
+            self.config['rooms']
+        )
 
-        if self.config['discord'].get('log', False):
+        if not room:
+            return
+
+        if room.get('discord_log', False):
             log.info('[discord] <%s> %s', message.author, message.content)
 
-        for room_config in rooms:
-            # skip rooms not configured for this message
-            if room_config['channel_id'] != message.channel.id:
-                continue
+        reply = aioxmpp.Message(
+            type_=aioxmpp.MessageType.GROUPCHAT,
+            to=aioxmpp.JID.fromstr(room['jid']),
+        )
 
-            # construct message
-            reply = aioxmpp.Message(
-                type_=aioxmpp.MessageType.GROUPCHAT,
-                to=aioxmpp.JID.fromstr(room_config['jid']),
-            )
-
-            reply.body[None] = await fmt_discord(client, message)
-            await self.client.send(reply)
+        reply.body[None] = await fmt_discord(client, message)
+        await self.client.send(reply)
 
     async def boot(self):
         log.info('connecting to xmpp...')

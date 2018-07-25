@@ -1,28 +1,48 @@
 # black-hole
 
-black-hole is a configurable XMPP to Discord bridge.
+black-hole is a configurable XMPP ↔ Discord bridge written in Python 3.6.
+
+It uses Discord.py and aioxmpp.
 
 ## Configuring
 
 Here is a sample `config.yaml`:
 
 ```yaml
+# XMPP credentials (JID and password).
 xmpp:
   jid: 'bot@xmpp.server'
   password: 'ramen'
+
+# black-hole supports multiple "rooms".
+#
+# The concept of a "room" in black-hole combines both a MUC and a Discord
+# channel. They are linked together with a Discord bot, a Discord webhook,
+# and a XMPP client.
 rooms:
-  - jid: 'general@muc.xmpp.server'
-    nick: 'black-hole'
+  - jid: 'general@muc.xmpp.server' # The JID of the MUC itself.
+
+    # The nickname to use when joining the MUC.
+    nick: 'black hole'
+
+    # The webhook URL to post to.
+    # This webhook should be on the same channel as the channel specified in
+    # `channel_id`.
     webhook: 'https://discordapp.com/api/webhooks/...'
-    # Channel to gather messages from and
-    # send them to the MUC
+
+    # The linked Discord channel. This won't be used to mirror messages from
+    # the MUC. Instead, it will be used to receive messages being sent in this
+    # channel and mirror them to the MUC.
     channel_id: 123456789012345678
-    # Enable logging to stdout?
+
+    # Log any message sent in the MUC to stdout.
     # log: true
+
+    # Log any message sent in the linked Discord channel to stdout.
+    # discord_log: true
 discord:
+  # Discord bot token, used to receive messages.
   token: 'NDU...'
-  # Enable logging to stdout?
-  # log: true
 
   # A map of JIDs to Discord user IDs.
   #
