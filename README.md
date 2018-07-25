@@ -70,3 +70,14 @@ listens for messages in the specified channel and transfers them to the MUC.
 
 We use a webhook because it allows us to customize the "author" and avatar of
 the posted message, which makes mirrored messages easier to read.
+
+### Message Edits
+
+When a message is edited on Discord, the edited version will be resent to the
+MUC with an "(edited)" prefix. aioxmpp presumably has no [XEP-0308] support,
+so we can't use it, and even if it did support it, it would still be quite
+clunky due to the way the XEP works.
+
+[XEP-0308]: https://xmpp.org/extensions/xep-0308.html
+
+Any edits made on the MUC are not reflected on Discord.
