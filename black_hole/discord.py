@@ -48,6 +48,9 @@ class Discord:
         content = msg.body.any()
         nick = member.nick
 
+        if len(content) > 1900:
+            content = content[:1900] + '... (trimmed)'
+
         payload = {
             'username': nick,
             'content': clean_content(content),
