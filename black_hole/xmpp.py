@@ -40,13 +40,6 @@ class XMPP:
 
         self.on_message_handlers = []
 
-    @property
-    def selectors(self):
-        """Message selectors to use."""
-        return [
-            aioxmpp.structs.LanguageRange.fromstr('*'),
-        ]
-
     def on_message(self, func):
         """A decorator that adds a handler to be called upon a message."""
         self.on_message_handlers.append(func)

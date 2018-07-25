@@ -24,8 +24,7 @@ class Room:
         if member == self.room.me:
             return
 
-        # select the correct message body
-        content = msg.body.lookup(self.xmpp.selectors)
+        content = msg.body.any()
 
         if self.config.get('log', False):
             log.info('[%s] <%s> %s', self.config['jid'], member.direct_jid, content)
