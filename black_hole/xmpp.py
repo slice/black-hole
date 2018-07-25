@@ -23,7 +23,7 @@ async def fmt_discord(client, message) -> str:
     cleaner = clean_content(use_nicknames=False)
 
     ctx = FakeContext(message, message.guild, client)
-    content = await cleaner.convert(ctx, message.content)
+    content = await cleaner.convert(ctx, message.system_content)
     return f'<{message.author}> {content}'
 
 
@@ -79,7 +79,7 @@ class XMPP:
             return
 
         if room.get('discord_log', False):
-            log.info('[discord] <%s> %s', message.author, message.content)
+            log.info('[discord] <%s> %s', message.author, message.system_content)
 
         reply = aioxmpp.Message(
             type_=aioxmpp.MessageType.GROUPCHAT,
