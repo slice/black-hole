@@ -14,10 +14,16 @@ rooms:
   - jid: 'general@muc.xmpp.server'
     nick: 'black-hole'
     webhook: 'https://discordapp.com/api/webhooks/...'
+    # Channel to gather messages from and
+    # send them to the MUC
+    channel_id: 123456789012345678
     # Enable logging to stdout?
     # log: true
 discord:
   token: 'NDU...'
+  # Enable logging to stdout?
+  # log: true
+
   # A map of JIDs to Discord user IDs.
   #
   # Allows black-hole to specify the avatar URL of a JID's associated Discord

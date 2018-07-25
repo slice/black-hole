@@ -14,11 +14,16 @@ class Room:
         self.loop = asyncio.get_event_loop()
         self.xmpp = xmpp
         self.config = config
+        self.room = None
 
     def _on_topic_changed(self, member, topic, *, nick=None, **kwargs):
         pass
 
     def _on_message(self, msg, member, source, **kwargs):
+        # ignore ourselves to prevent infinite loops
+        if member == self.room.me:
+            return
+
         # select the correct message body
         content = msg.body.lookup(self.xmpp.selectors)
 
@@ -41,3 +46,5 @@ class Room:
 
         room.on_message.connect(self._on_message)
         room.on_topic_changed.connect(self._on_topic_changed)
+
+        self.room = room
