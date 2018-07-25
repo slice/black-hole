@@ -1,6 +1,4 @@
 git+https://github.com/Rapptz/discord.py@rewrite
 git+https://github.com/horazont/aioxmpp@devel
-
 aiohttp
-
 ruamel.yaml
