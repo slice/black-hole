@@ -29,13 +29,27 @@ class BlackHole:
         self.xmpp.on_message(self.on_message)
 
         self.discord = Discord(
-            config=config,
+            config=config
         )
+
+        self.discord.client.add_on_message(self.on_discord_message)
 
     async def on_message(self, room, msg, member, source):
         """Called when a message in a MUC room is sent."""
-        # forward directly to discord
+        # directly bridge everything to discord
         await self.discord.bridge(room, msg, member, source)
+
+    async def on_discord_message(self, client, message):
+        """Called when a message in a discord"""
+        if message.channel.id != self.config['discord']['channel_id']:
+            return
+
+        # ignore messages from webhooks (which are very probably ourselves),
+        # but not from bots
+        if message.webhook_id is not None:
+            return
+
+        await self.xmpp.bridge(client, message)
 
     def run(self):
         log.info('booting services')

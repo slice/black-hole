@@ -1,5 +1,5 @@
 git+https://github.com/Rapptz/discord.py@rewrite
-aioxmpp
+git+https://github.com/horazont/aioxmpp@devel
 
 aiohttp
 

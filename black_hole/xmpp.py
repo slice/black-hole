@@ -1,12 +1,29 @@
 import asyncio
 import logging
+from collections import namedtuple
 
 import aioxmpp
+from discord.ext.commands import clean_content
 
 from .room import Room
 
 __all__ = ['XMPP']
 log = logging.getLogger(__name__)
+
+FakeContext = namedtuple('FakeContext', (
+    'message',
+    'guild',
+    'bot'
+))
+
+
+async def fmt_discord(client, message) -> str:
+    """Format a discord message into a string for XMPP."""
+    cleaner = clean_content(use_nicknames=False)
+
+    ctx = FakeContext(message, message.guild, client)
+    content = await cleaner.convert(ctx, message.content)
+    return f'[discord] <{message.author}> {content}'
 
 
 class XMPP:
@@ -49,6 +66,23 @@ class XMPP:
             # Room needs a reference to self in order to call _handle_message
             room = Room(self, config=room_config)
             room.join(self.muc)
+
+    async def bridge(self, client, message):
+        """Take a discord message and send it over to the MUC."""
+        rooms = self.config['rooms']
+
+        if self.config['discord'].get('log', False):
+            log.info('[discord] <%s> %s', message.author, message.content)
+
+        for room_config in rooms:
+            reply = aioxmpp.Message(
+                type_=aioxmpp.MessageType.GROUPCHAT,
+                to=aioxmpp.JID.fromstr(room_config['jid']),
+            )
+
+            reply.body[None] = await fmt_discord(client, message)
+
+            await self.client.send(reply)
 
     async def boot(self):
         log.info('connecting to xmpp...')
