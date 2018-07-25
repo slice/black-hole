@@ -19,7 +19,6 @@ class Discord:
     def __init__(self, *, config):
         self.config = config
         self.client = commands.Bot(command_prefix=commands.when_mentioned)
-        self.client.remove_command('help')
         self.session = aiohttp.ClientSession(loop=self.client.loop)
 
     def resolve_avatar(self, member):
