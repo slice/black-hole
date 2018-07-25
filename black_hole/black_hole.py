@@ -39,14 +39,14 @@ class BlackHole:
         # directly bridge everything to discord
         await self.discord.bridge(room, msg, member, source)
 
-    async def on_discord_message(self, client, message):
+    async def on_discord_message(self, message):
         """Called when a message in a discord"""
         # ignore messages from webhooks (which are very probably ourselves),
         # but not from bots
         if message.webhook_id is not None:
             return
 
-        await self.xmpp.bridge(client, message)
+        await self.xmpp.bridge(self.discord.client, message)
 
     def run(self):
         log.info('booting services')

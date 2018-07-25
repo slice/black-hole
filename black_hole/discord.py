@@ -19,7 +19,7 @@ class DiscordClient(discord.Client):
 
     async def on_message(self, message):
         for handler in self.message_handlers:
-            await handler(self, message)
+            await handler(message)
 
 
 class Discord:
