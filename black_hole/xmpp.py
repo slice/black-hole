@@ -23,7 +23,7 @@ async def fmt_discord(client, message) -> str:
 
     ctx = FakeContext(message, message.guild, client)
     content = await cleaner.convert(ctx, message.content)
-    return f'[discord] <{message.author}> {content}'
+    return f'<{message.author}> {content}'
 
 
 class XMPP:
