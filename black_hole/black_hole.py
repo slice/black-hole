@@ -33,6 +33,7 @@ class BlackHole:
         )
 
         self.discord.client.add_listener(self.on_discord_message, 'on_message')
+        self.discord.client.add_listener(self.on_discord_message_edit, 'on_message_edit')
 
     async def on_message(self, room, msg, member, source):
         """Called when a message in a MUC room is sent."""
@@ -45,6 +46,16 @@ class BlackHole:
             return
 
         await self.xmpp.bridge(self.discord.client, message)
+
+    async def on_discord_message_edit(self, before, after):
+        if after.webhook_id is not None:
+            return
+
+        if before.system_content == after.system_content:
+            # edited in ways we don't care about
+            return
+
+        await self.xmpp.bridge(self.discord.client, after, edited=True)
 
     def run(self):
         log.info('booting services')

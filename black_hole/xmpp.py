@@ -68,7 +68,7 @@ class XMPP:
             room = Room(self, config=room_config)
             room.join(self.muc)
 
-    async def bridge(self, client, message):
+    async def bridge(self, client, message, *, edited=False):
         """Take a discord message and send it over to the MUC."""
         room = discord.utils.find(
             lambda room: room['channel_id'] == message.channel.id,
@@ -86,7 +86,12 @@ class XMPP:
             to=aioxmpp.JID.fromstr(room['jid']),
         )
 
-        reply.body[None] = await fmt_discord(client, message)
+        muc_content = await fmt_discord(client, message)
+
+        if edited:
+            muc_content += ' (edited)'
+
+        reply.body[None] = muc_content
         await self.client.send(reply)
 
     async def boot(self):
