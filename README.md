@@ -2,7 +2,14 @@
 
 black-hole is a configurable XMPP ↔ Discord bridge written in Python 3.6.
 
-It uses Discord.py and aioxmpp.
+It uses [Discord.py@rewrite] and [aioxmpp].
+
+[Discord.py@rewrite]: http://discordpy.readthedocs.io/en/rewrite/index.html
+[aioxmpp]: https://docs.zombofant.net/aioxmpp/devel/index.html
+
+## Requirements
+
+- Python 3.6+ (Tested on Python 3.7)
 
 ## Configuring
 
