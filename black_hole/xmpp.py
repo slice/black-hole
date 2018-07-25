@@ -75,13 +75,17 @@ class XMPP:
             log.info('[discord] <%s> %s', message.author, message.content)
 
         for room_config in rooms:
+            # skip rooms not configured for this message
+            if room_config['channel_id'] != message.channel.id:
+                continue
+
+            # construct message
             reply = aioxmpp.Message(
                 type_=aioxmpp.MessageType.GROUPCHAT,
                 to=aioxmpp.JID.fromstr(room_config['jid']),
             )
 
             reply.body[None] = await fmt_discord(client, message)
-
             await self.client.send(reply)
 
     async def boot(self):

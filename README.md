@@ -14,13 +14,13 @@ rooms:
   - jid: 'general@muc.xmpp.server'
     nick: 'black-hole'
     webhook: 'https://discordapp.com/api/webhooks/...'
+    # Channel to gather messages from and
+    # send them to the MUC
+    channel_id: 123456789012345678
     # Enable logging to stdout?
     # log: true
 discord:
   token: 'NDU...'
-  # Channel to gather messages from and
-  # send them to the MUC
-  channel_id: 123456789012345678
   # Enable logging to stdout?
   # log: true
 

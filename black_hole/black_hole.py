@@ -41,9 +41,6 @@ class BlackHole:
 
     async def on_discord_message(self, client, message):
         """Called when a message in a discord"""
-        if message.channel.id != self.config['discord']['channel_id']:
-            return
-
         # ignore messages from webhooks (which are very probably ourselves),
         # but not from bots
         if message.webhook_id is not None:
