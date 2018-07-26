@@ -19,13 +19,42 @@ FakeContext = namedtuple('FakeContext', (
 ))
 
 
-async def fmt_discord(client, message) -> str:
-    """Format a discord message into a string for XMPP."""
-    cleaner = clean_content(use_nicknames=False)
+def extract_message_content(message: discord.Message) -> str:
+    """Extract a message's content, along with any attachment URLs."""
+    base_content = message.system_content
 
+    if message.attachments:
+        urls = ' '.join(attachment.proxy_url for attachment in message.attachments)
+        base_content += (' ' + urls)
+
+    if message.embeds:
+        s = '' if len(message.embeds) == 1 else 's'
+        base_content += f' ({len(message.embeds)} embed{s})'
+
+    return base_content
+
+
+async def format_discord_message(client, message: discord.Message) -> str:
+    """Format a Discord message into a string for XMPP."""
+    content = extract_message_content(message)
+
+    # Clean any mentions from the message using the clean_content converter,
+    # which is normally not supposed to be used in these circumstances (thus
+    # requiring a fake Context class).
+    cleaner = clean_content(use_nicknames=False)
     ctx = FakeContext(message, message.guild, client)
-    content = await cleaner.convert(ctx, message.system_content)
-    return f'<{message.author}> {content}'
+    content = await cleaner.convert(ctx, content)
+
+    # If someone else in this channel has the same username as the author,
+    # present the user's discriminator in the forwarded message as well as the
+    # username.
+    presented_name = message.author.name
+    users = list(filter(lambda user: user.name == message.author.name,
+                        message.channel.members))
+    if len(users) > 1:
+        presented_name = str(message.author)
+
+    return f'<{presented_name}> {content}'
 
 
 class XMPP:
@@ -73,19 +102,20 @@ class XMPP:
             return
 
         if room.get('discord_log', False):
-            log.info('[discord] <%s> %s', message.author, message.system_content)
+            content = extract_message_content(message)
+            log.info('[discord] <%s> %s', message.author, content)
 
         reply = aioxmpp.Message(
             type_=aioxmpp.MessageType.GROUPCHAT,
             to=aioxmpp.JID.fromstr(room['jid']),
         )
 
-        muc_content = await fmt_discord(client, message)
+        formatted_content = await format_discord_message(client, message)
 
         if edited:
-            muc_content += ' (edited)'
+            formatted_content += ' (edited)'
 
-        reply.body[None] = muc_content
+        reply.body[None] = formatted_content
         await self.client.send(reply)
 
     async def boot(self):

@@ -51,9 +51,9 @@ class BlackHole:
         if after.webhook_id is not None:
             return
 
-        if before.system_content == after.system_content:
+        if before.content == after.content:
             # This message was edited in ways we don't care about, so let's not
-            # bother.
+            # bother bridging the edit.
             return
 
         await self.xmpp.bridge(self.discord.client, after, edited=True)
