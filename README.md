@@ -77,7 +77,28 @@ listens for messages in the specified channel and transfers them to the MUC.
 We use a webhook because it allows us to customize the "author" and avatar of
 the posted message, which makes mirrored messages easier to read.
 
-### Message Edits
+#### To Discord
+
+##### Mentions
+
+Any message travelling from MUC to Discord are stripped of mentions.
+
+Any role or user mention (including @everyone and @here) are escaped/stripped
+and do not mention anyone. Channel mentions are not, but you must send them in
+"raw" format (like `<#123>`).
+
+#### To MUC
+
+##### Attachments
+
+Any attachment URLs are appended to the end of the message.
+
+##### Embeds
+
+In the case of bots, the number of embeds present in the message is appended
+to the end of the message.
+
+##### Message Edits
 
 When a message is edited on Discord, the edited version will be resent to the
 MUC with an "(edited)" prefix. aioxmpp presumably has no [XEP-0308] support,
