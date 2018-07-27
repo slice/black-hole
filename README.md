@@ -131,3 +131,17 @@ Use these commands to manage the JID map from Discord:
 ```
 
 The `set` and `del` commands automatically save changes.
+
+### Disabling bridging
+
+You can quickly toggle bridging using the Discord bot:
+
+```
+# Toggle the current room from being bridged.
+@bot room toggle
+
+# Toggle room@xmpp.server from being bridged.
+@bot room toggle room@xmpp.server
+```
+
+This state persists between reboots (saved in configuration file).
