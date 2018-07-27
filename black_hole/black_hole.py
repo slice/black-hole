@@ -38,6 +38,8 @@ class BlackHole:
 
     async def on_message(self, room, msg, member, source):
         """Bridge a MUC message to its Discord channel."""
+        if room.config.get('disabled', False):
+            return
         await self.discord.bridge(room, msg, member, source)
 
     async def on_discord_message(self, message):

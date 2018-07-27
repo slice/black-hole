@@ -28,11 +28,40 @@ class Management:
         with open('config.yaml', 'w') as fp:
             yaml.dump(self.config, fp)
 
+    @commands.group(name='rooms', aliases=['room'])
+    @managers_only()
+    async def rooms_group(self, ctx):
+        """Manages rooms."""
+
+    @rooms_group.command(name='toggle')
+    async def rooms_toggle(self, ctx, room_jid=None):
+        """Toggles a room from being bridged both ways."""
+        if not room_jid and ctx.guild:
+            room_jid = discord.utils.find(
+                lambda room: room['channel_id'] == ctx.channel.id,
+                self.config['rooms']
+            )['jid']
+
+        room = discord.utils.find(
+            lambda room: room['jid'] == room_jid,
+            self.config['rooms']
+        )
+
+        if not room:
+            await ctx.send('MUC not found.')
+            return
+
+        room['disabled'] = not room.get('disabled', False)
+        state = 'disabled' if room['disabled'] else 'enabled'
+        await ctx.send(
+            f'\N{CRAB} Bridging to and from {room_jid} is now {state}.'
+        )
+        self.save_config()
+
     @commands.group(name='jid')
     @managers_only()
     async def jid_group(self, ctx):
         """Manage the JID map."""
-        pass
 
     @jid_group.command(name='list', aliases=['show'])
     async def jid_list(self, ctx):

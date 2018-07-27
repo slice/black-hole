@@ -98,7 +98,7 @@ class XMPP:
             self.config['rooms']
         )
 
-        if not room:
+        if not room or room.get('disabled', False):
             return
 
         if room.get('discord_log', False):
