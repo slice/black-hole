@@ -1,5 +1,6 @@
 __all__ = ['Discord']
 
+import asyncio
 import logging
 
 import aiohttp
@@ -22,6 +23,11 @@ class Discord:
         self.client.add_cog(Management(self.client, self.config))
         self.session = aiohttp.ClientSession(loop=self.client.loop)
 
+        self.client.loop.create_task(self._sender())
+
+        self._queue = []
+        self._incoming = asyncio.Event()
+
     def resolve_avatar(self, member):
         mappings = self.config['discord'].get('jid_map', {})
         user_id = mappings.get(str(member.direct_jid))
@@ -33,7 +39,7 @@ class Discord:
         return user.avatar_url_as(format='png')
 
     async def bridge(self, room, msg, member, source):
-        """POSTs to a room's webhook URL."""
+        """Add a MUC message to the queue to be processed."""
         content = msg.body.any()
         nick = member.nick
 
@@ -46,11 +52,35 @@ class Discord:
             'avatar_url': self.resolve_avatar(member),
         }
 
-        try:
-            webhook_url = room.config['webhook']
-            await self.session.post(webhook_url, json=payload)
-        except aiohttp.ClientError:
-            log.exception('failed to bridge content')
+        log.debug('adding message to queue')
+
+        # add this message to the queue
+        self._queue.append({
+            'webhook_url': room.config['webhook'],
+            'payload': payload,
+        })
+
+        self._incoming.set()
+
+    async def _send_all(self):
+        """Send all pending webhook messages."""
+        log.debug('working on %d jobs...', len(self._queue))
+        for job in self._queue:
+            try:
+                await self.session.post(job['webhook_url'], json=job['payload'])
+                await asyncio.sleep(0.25)
+            except aiohttp.ClientError:
+                log.exception('failed to bridge content')
+        self._queue.clear()
+        self._incoming.clear()
+
+    async def _sender(self):
+        while True:
+            log.debug('waiting for messages...')
+            await self._incoming.wait()
+
+            log.debug('emptying queue')
+            await self._send_all()
 
     async def boot(self):
         log.info('connecting to discord...')
