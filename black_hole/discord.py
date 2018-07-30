@@ -68,7 +68,7 @@ class Discord:
         for job in self._queue:
             try:
                 await self.session.post(job['webhook_url'], json=job['payload'])
-                await asyncio.sleep(0.25)
+                await asyncio.sleep(self.config['discord'].get('delay', 0.25))
             except aiohttp.ClientError:
                 log.exception('failed to bridge content')
         self._queue.clear()
