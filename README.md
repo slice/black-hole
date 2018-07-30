@@ -4,7 +4,7 @@ black-hole is a configurable XMPP ↔ Discord bridge written in Python 3.6.
 
 It uses [Discord.py@rewrite] and [aioxmpp].
 
-[Discord.py@rewrite]: http://discordpy.readthedocs.io/en/rewrite/index.html
+[discord.py@rewrite]: http://discordpy.readthedocs.io/en/rewrite/index.html
 [aioxmpp]: https://docs.zombofant.net/aioxmpp/devel/index.html
 
 ## Requirements
@@ -41,13 +41,11 @@ rooms:
     # The Discord channel's ID. (Discord → MUC)
     channel_id: 123456789012345678
 
-    # NOTE: The webhook should be pointing to the same channel as channel_id.
-
     # Log any message sent in the MUC to standard out.
-    # log: true
+    log: false
 
     # Log any message sent in the linked Discord channel to standard out.
-    # discord_log: true
+    discord_log: false
 discord:
   # Discord bot token, used to receive messages.
   token: 'NDU...'
@@ -59,12 +57,14 @@ discord:
     - 456
 
   # A map of JIDs to Discord user IDs.
-  #
   # Allows black-hole to specify the avatar URL of a JID's associated Discord
   # account when posting to the webhook.
   jid_map:
     'user_a@xmpp.server': 123
     'user_b@xmpp.server': 456
+
+  # The delay in seconds between webhook sends (for maintaining message order).
+  delay: 0.25
 ```
 
 ## Documentation
@@ -87,33 +87,38 @@ Any role or user mention (including @everyone and @here) are escaped/stripped
 and do not mention anyone. Channel mentions are not, but you must send them in
 "raw" format (like `<#123>`).
 
+##### Queueing
+
+To preserve message order, MUC messages are pushed into a queue and a background
+consumer POSTs to the webhook with a (configurable) delay between requests.
+
 #### To MUC
 
 ##### Attachments
 
-Any attachment URLs are appended to the end of the message.
+Any attachment URLs are appended to the end of the message, separated by spaces.
 
 ##### Embeds
 
-In the case of bots, the number of embeds present in the message is appended
-to the end of the message.
+In the case of bots, the number of embeds present in the message is appended to
+the end of the message.
 
 ##### Message Edits
 
 When a message is edited on Discord, the edited version will be resent to the
-MUC with an "(edited)" prefix. aioxmpp presumably has no [XEP-0308] support,
-so we can't use it, and even if it did support it, it would still be quite
-clunky due to the way the XEP works.
+MUC with an "(edited)" prefix. aioxmpp presumably has no [XEP-0308] support, so
+we can't use it, and even if it did support it, it would still be quite clunky
+due to the way the XEP works.
 
-[XEP-0308]: https://xmpp.org/extensions/xep-0308.html
+[xep-0308]: https://xmpp.org/extensions/xep-0308.html
 
 Any edits made on the MUC are not reflected on Discord.
 
 ### JID Map
 
-The JID map allows the XMPP → Discord functionality to resolve the user's
-avatar to be displayed through the webhook. It can be managed manually through
-the config file or through the Discord bot.
+The JID map allows the XMPP → Discord functionality to resolve the user's avatar
+to be displayed through the webhook. It can be managed manually through the
+config file or through the Discord bot.
 
 #### Discord Management
 
