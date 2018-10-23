@@ -25,7 +25,7 @@ xmpp:
 #
 # The concept of a "room" in black-hole combines both a MUC and a Discord
 # channel. They are linked together with a Discord bot, a Discord webhook,
-# and a XMPP client.
+# and an XMPP client.
 rooms:
   - jid: 'general@muc.xmpp.server' # The JID of the MUC.
 
@@ -149,4 +149,4 @@ You can quickly toggle bridging using the Discord bot:
 @bot room toggle room@xmpp.server
 ```
 
-This state persists between reboots (saved in configuration file).
+This state persists between restarts (saved in configuration file).
