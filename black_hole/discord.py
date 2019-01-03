@@ -2,6 +2,7 @@ __all__ = ['Discord']
 
 import asyncio
 import logging
+import time
 
 import aiohttp
 from discord.ext import commands
@@ -11,6 +12,8 @@ from .utils import clean_content
 
 log = logging.getLogger(__name__)
 
+#: period until a user in cache will be invalidated in seconds
+CACHE_INVALID = 30 * 60
 
 class Discord:
     """A wrapper around a Discord client that mirrors XMPP messages to a room's
@@ -28,15 +31,73 @@ class Discord:
         self._queue = []
         self._incoming = asyncio.Event()
 
-    def resolve_avatar(self, member):
+        #: { int: (timestamp, str) }
+        self._avatar_cache = {}
+
+    async def _get_from_cache(self, user_id: int) -> str:
+        """Get an avatar in cache."""
+
+        # if we insert anything into the cache, this timestamp
+        # represents when that value will become invalidated.
+
+        # it uses time.monotonic() because the monotonic clock
+        # is way more stable than the general clock.
+        invalidation_ts = time.monotonic() + CACHE_INVALID
+
+        value = self._avatar_cache.get(user_id)
+
+        if value is None:
+            # try get_user_info, which has a 1/1 ratelimit.
+            # since it has that low of a ratelimit we cache
+            # the resulting avatar url internally for 30 minutes.
+            user = await self.client.get_user_info(user_id)
+
+            # user not found, write that in cache so we don't need
+            # to keep checking later on.
+            if user is None:
+                self._avatar_cache[user_id] = (invalidation_ts, None)
+                return None
+
+            # user found, store its avatar url in cache and return it
+            avatar_url = user.avatar_url_as(format='png')
+            self._avatar_cache[user_id] = (invalidation_ts, avatar_url)
+            return avatar_url
+
+        current = time.monotonic()
+        user_ts, avatar_url = value
+
+        # if the user cache value is invalid,
+        # we recall _get_from_cache with the given user id deleted
+        # so that it calls get_user_info and writes the new data
+        # to cache.
+        if current > user_ts:
+            self._avatar_cache.pop(user_id)
+            return await self._get_from_cache(user_id)
+
+        return avatar_url
+
+    async def resolve_avatar(self, member) -> str:
+        """Resolve an avatar url, given a XMPP member.
+
+        This caches the given avatar url for a set period of time.
+        """
         mappings = self.config['discord'].get('jid_map', {})
         user_id = mappings.get(str(member.direct_jid))
-        user = self.client.get_user(user_id)
 
-        if not user:
+        # if nothing on the map, there isn't a need
+        # to check our caches
+        if user_id is None:
             return None
 
-        return user.avatar_url_as(format='png')
+        user = self.client.get_user(user_id)
+
+        # if the user is already in the client's cache,
+        # we use it (it will also be better updated
+        # due to USER_UPDATE events)
+        if user is not None:
+            return user.avatar_url_as(format='png')
+
+        return await self._get_from_cache(user_id)
 
     async def bridge(self, room, msg, member, source):
         """Add a MUC message to the queue to be processed."""
@@ -49,7 +110,7 @@ class Discord:
         payload = {
             'username': nick,
             'content': clean_content(content),
-            'avatar_url': self.resolve_avatar(member),
+            'avatar_url': await self.resolve_avatar(member),
         }
 
         log.debug('adding message to queue')
