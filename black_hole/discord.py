@@ -34,13 +34,17 @@ class Discord:
     async def _get_from_cache(self, user_id: int) -> str:
         """Get an avatar in cache."""
 
-        # if we insert anything into the cache, this timestamp
+        # if we insert anything into the cache, invalidation_ts
         # represents when that value will become invalidated.
 
         # it uses time.monotonic() because the monotonic clock
         # is way more stable than the general clock.
         current = time.monotonic()
-        invalidation_ts = current + self.config['discord']['avatar_cache']
+
+        # the default is 30 minutes when not provided
+        cache_period = self.config['discord'].get('avatar_cache', 80 * 60)
+
+        invalidation_ts = current + cache_period
 
         value = self._avatar_cache.get(user_id)
 
