@@ -12,9 +12,6 @@ from .utils import clean_content
 
 log = logging.getLogger(__name__)
 
-#: period until a user in cache will be invalidated in seconds
-CACHE_INVALID = 30 * 60
-
 class Discord:
     """A wrapper around a Discord client that mirrors XMPP messages to a room's
     configured webhook.
@@ -42,7 +39,8 @@ class Discord:
 
         # it uses time.monotonic() because the monotonic clock
         # is way more stable than the general clock.
-        invalidation_ts = time.monotonic() + CACHE_INVALID
+        current = time.monotonic()
+        invalidation_ts = current + self.config['discord']['avatar_cache']
 
         value = self._avatar_cache.get(user_id)
 
@@ -63,7 +61,6 @@ class Discord:
             self._avatar_cache[user_id] = (invalidation_ts, avatar_url)
             return avatar_url
 
-        current = time.monotonic()
         user_ts, avatar_url = value
 
         # if the user cache value is invalid,
