@@ -65,6 +65,10 @@ discord:
 
   # The delay in seconds between webhook sends (for maintaining message order).
   delay: 0.25
+
+  # The delay in seconds before a cached avatar is invalidated and refetched,
+  # in seconds. The default is 30 minutes.
+  avatar_cache: 1800
 ```
 
 ## Documentation
