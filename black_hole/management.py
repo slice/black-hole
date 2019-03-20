@@ -6,18 +6,17 @@ It allows management of the JID map.
 __all__ = ['Management']
 
 import discord
-from ruamel.yaml import YAML
 from discord.ext import commands
+from ruamel.yaml import YAML
 
 
 def managers_only():
     def predicate(ctx):
-        cog = ctx.command.instance
-        return ctx.author.id in cog.config['discord'].get('managers', [])
+        return ctx.author.id in ctx.cog.config['discord'].get('managers', [])
     return commands.check(predicate)
 
 
-class Management:
+class Management(commands.Cog):
     def __init__(self, bot, config):
         self.bot = bot
         self.config = config
