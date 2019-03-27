@@ -131,7 +131,7 @@ class Discord:
             try:
                 await self.session.post(job['webhook_url'], json=job['payload'])
                 await asyncio.sleep(self.config['discord'].get('delay', 0.25))
-            except aiohttp.ClientError:
+            except (discord.DiscordException, aiohttp.ClientError):
                 log.exception('failed to bridge content')
         self._queue.clear()
         self._incoming.clear()
