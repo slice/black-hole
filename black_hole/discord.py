@@ -6,6 +6,7 @@ import time
 
 import aiohttp
 from discord.ext import commands
+from discord import DiscordException
 
 from .management import Management
 from .utils import clean_content
@@ -131,7 +132,7 @@ class Discord:
             try:
                 await self.session.post(job['webhook_url'], json=job['payload'])
                 await asyncio.sleep(self.config['discord'].get('delay', 0.25))
-            except (discord.DiscordException, aiohttp.ClientError):
+            except (DiscordException, aiohttp.ClientError):
                 log.exception('failed to bridge content')
         self._queue.clear()
         self._incoming.clear()
