@@ -51,10 +51,8 @@ class Management(commands.Cog):
             return
 
         room['disabled'] = not room.get('disabled', False)
-        state = 'disabled' if room['disabled'] else 'enabled'
-        await ctx.send(
-            f'\N{CRAB} Bridging to and from {room_jid} is now {state}.'
-        )
+        state = 'Disabled' if room['disabled'] else 'Enabled'
+        await ctx.send(f'\N{CRAB} {state} bridging to and from {room_jid}.')
         self.save_config()
 
     @commands.group(name='jid')
