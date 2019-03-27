@@ -109,6 +109,11 @@ class Discord:
         if len(content) > 1900:
             content = content[:1900] + '... (trimmed)'
 
+        # handle cases where the member's nick is too small for a
+        # webhook username
+        if len(nick) < 2:
+            nick = f'<{nick}>'
+
         payload = {
             'username': nick,
             'content': clean_content(content),
