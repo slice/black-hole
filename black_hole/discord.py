@@ -6,6 +6,7 @@ import time
 
 import aiohttp
 from discord.ext import commands
+from discord import DiscordException
 
 from .management import Management
 from .utils import clean_content
@@ -108,6 +109,11 @@ class Discord:
         if len(content) > 1900:
             content = content[:1900] + '... (trimmed)'
 
+        # handle cases where the member's nick is too small for a
+        # webhook username
+        if len(nick) < 2:
+            nick = f'<{nick}>'
+
         payload = {
             'username': nick,
             'content': clean_content(content),
@@ -131,7 +137,7 @@ class Discord:
             try:
                 await self.session.post(job['webhook_url'], json=job['payload'])
                 await asyncio.sleep(self.config['discord'].get('delay', 0.25))
-            except aiohttp.ClientError:
+            except (DiscordException, aiohttp.ClientError):
                 log.exception('failed to bridge content')
         self._queue.clear()
         self._incoming.clear()
