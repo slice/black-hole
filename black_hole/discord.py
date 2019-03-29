@@ -13,6 +13,18 @@ from .utils import clean_content
 
 log = logging.getLogger(__name__)
 
+
+def ensure_valid_nick(nick: str) -> str:
+    """Ensure that a nickname from XMPP is valid to be used as a webhook
+    username in Discord.
+    """
+    if len(nick) < 2:
+        return f'<{nick}>'
+    if len(nick) > 32:
+        return nick[:32]
+    return nick
+
+
 class Discord:
     """A wrapper around a Discord client that mirrors XMPP messages to a room's
     configured webhook.
@@ -104,18 +116,12 @@ class Discord:
     async def bridge(self, room, msg, member, source):
         """Add a MUC message to the queue to be processed."""
         content = msg.body.any()
-        nick = member.nick
 
         if len(content) > 1900:
             content = content[:1900] + '... (trimmed)'
 
-        # handle cases where the member's nick is too small for a
-        # webhook username
-        if len(nick) < 2:
-            nick = f'<{nick}>'
-
         payload = {
-            'username': nick,
+            'username': ensure_valid_nick(member.nick),
             'content': clean_content(content),
             'avatar_url': await self.resolve_avatar(member),
         }
