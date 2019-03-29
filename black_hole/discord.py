@@ -3,6 +3,7 @@ __all__ = ['Discord']
 import asyncio
 import logging
 import time
+from typing import Optional
 
 import aiohttp
 from discord.ext import commands
@@ -44,7 +45,7 @@ class Discord:
         #: { int: (timestamp, str) }
         self._avatar_cache = {}
 
-    async def _get_from_cache(self, user_id: int) -> str:
+    async def _get_from_cache(self, user_id: int) -> Optional[str]:
         """Get an avatar in cache."""
 
         # if we insert anything into the cache, invalidation_ts
@@ -65,7 +66,7 @@ class Discord:
             # try get_user_info, which has a 1/1 ratelimit.
             # since it has that low of a ratelimit we cache
             # the resulting avatar url internally for 30 minutes.
-            user = await self.client.get_user_info(user_id)
+            user = await self.client.fetch_user(user_id)
 
             # user not found, write that in cache so we don't need
             # to keep checking later on.
@@ -90,7 +91,7 @@ class Discord:
 
         return avatar_url
 
-    async def resolve_avatar(self, member) -> str:
+    async def resolve_avatar(self, member) -> Optional[str]:
         """Resolve an avatar url, given a XMPP member.
 
         This caches the given avatar url for a set period of time.
