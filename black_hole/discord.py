@@ -144,11 +144,23 @@ class Discord:
         log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
             try:
-                log.exception("failed to bridge content")
-                await self.session.post(job["webhook_url"], json=job["payload"])
+                resp = await self.session.post(job["webhook_url"], json=job["payload"])
                 await asyncio.sleep(self.config["discord"].get("delay", 0.25))
             except Exception:
                 log.exception("failed to bridge content")
+
+            if resp.status not in (200, 204):
+                try:
+                    body = await resp.read()
+                except Exception:
+                    body = "<none>"
+
+                log.warning(
+                    "failed to bridge discord -> xmpp. status=%d, body=%r",
+                    resp.status,
+                    body,
+                )
+
         self._queue.clear()
         self._incoming.clear()
 
