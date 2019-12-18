@@ -1,4 +1,4 @@
-__all__ = ['Discord']
+__all__ = ["Discord"]
 
 import asyncio
 import logging
@@ -20,7 +20,7 @@ def ensure_valid_nick(nick: str) -> str:
     username in Discord.
     """
     if len(nick) < 2:
-        return f'<{nick}>'
+        return f"<{nick}>"
     if len(nick) > 32:
         return nick[:32]
     return nick
@@ -56,7 +56,7 @@ class Discord:
         current = time.monotonic()
 
         # the default is 30 minutes when not provided
-        cache_period = self.config['discord'].get('avatar_cache', 80 * 60)
+        cache_period = self.config["discord"].get("avatar_cache", 80 * 60)
 
         invalidation_ts = current + cache_period
 
@@ -75,7 +75,7 @@ class Discord:
                 return None
 
             # user found, store its avatar url in cache and return it
-            avatar_url = user.avatar_url_as(format='png')
+            avatar_url = user.avatar_url_as(format="png")
             self._avatar_cache[user_id] = (invalidation_ts, avatar_url)
             return avatar_url
 
@@ -96,7 +96,7 @@ class Discord:
 
         This caches the given avatar url for a set period of time.
         """
-        mappings = self.config['discord'].get('jid_map', {})
+        mappings = self.config["discord"].get("jid_map", {})
         user_id = mappings.get(str(member.direct_jid))
 
         # if nothing on the map, there isn't a need
@@ -110,7 +110,7 @@ class Discord:
         # we use it (it will also be better updated
         # due to USER_UPDATE events)
         if user is not None:
-            return user.avatar_url_as(format='png')
+            return user.avatar_url_as(format="png")
 
         return await self._get_from_cache(user_id)
 
@@ -119,44 +119,47 @@ class Discord:
         content = msg.body.any()
 
         if len(content) > 1900:
-            content = content[:1900] + '... (trimmed)'
+            content = content[:1900] + "... (trimmed)"
 
         payload = {
-            'username': ensure_valid_nick(member.nick),
-            'content': clean_content(content),
-            'avatar_url': await self.resolve_avatar(member),
+            "username": ensure_valid_nick(member.nick),
+            "content": clean_content(content),
+            "avatar_url": await self.resolve_avatar(member),
         }
 
-        log.debug('adding message to queue')
+        log.debug("adding message to queue")
 
         # add this message to the queue
-        self._queue.append({
-            'webhook_url': room.config['webhook'],
-            'payload': payload,
-        })
+        self._queue.append(
+            {
+                "webhook_url": room.config["webhook"],
+                "payload": payload,
+            }
+        )
 
         self._incoming.set()
 
     async def _send_all(self):
         """Send all pending webhook messages."""
-        log.debug('working on %d jobs...', len(self._queue))
+        log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
             try:
-                await self.session.post(job['webhook_url'], json=job['payload'])
-                await asyncio.sleep(self.config['discord'].get('delay', 0.25))
-            except (DiscordException, aiohttp.ClientError):
-                log.exception('failed to bridge content')
+                log.exception("failed to bridge content")
+                await self.session.post(job["webhook_url"], json=job["payload"])
+                await asyncio.sleep(self.config["discord"].get("delay", 0.25))
+            except Exception:
+                log.exception("failed to bridge content")
         self._queue.clear()
         self._incoming.clear()
 
     async def _sender(self):
         while True:
-            log.debug('waiting for messages...')
+            log.debug("waiting for messages...")
             await self._incoming.wait()
 
-            log.debug('emptying queue')
+            log.debug("emptying queue")
             await self._send_all()
 
     async def boot(self):
-        log.info('connecting to discord...')
-        await self.client.start(self.config['discord']['token'])
+        log.info("connecting to discord...")
+        await self.client.start(self.config["discord"]["token"])
