@@ -26,7 +26,7 @@ class BlackHole:
         )
 
         # Register an event handler when we get a message from MUCs.
-        self.xmpp.on_message(self.on_message)
+        self.xmpp.on_message(self.on_xmpp_message)
 
         self.discord = Discord(
             config=config
@@ -36,18 +36,25 @@ class BlackHole:
         self.discord.client.add_listener(self.on_discord_message_edit,
                                          'on_message_edit')
 
-    async def on_message(self, room, msg, member, source):
+    async def on_xmpp_message(self, room, msg, member, source):
         """Bridge a MUC message to its Discord channel."""
         if room.config.get('disabled', False):
             return
-        await self.discord.bridge(room, msg, member, source)
+
+        try:
+            await self.discord.bridge(room, msg, member, source)
+        except Exception:
+            log.exception('failed to bridge a message from xmpp to discord')
 
     async def on_discord_message(self, message):
         """Bridge a Discord message to its MUC."""
         if message.webhook_id is not None:
             return
 
-        await self.xmpp.bridge(self.discord.client, message)
+        try:
+            await self.xmpp.bridge(self.discord.client, message)
+        except Exception:
+            log.exception('failed to bridge a message from discord to xmpp')
 
     async def on_discord_message_edit(self, before, after):
         if after.webhook_id is not None:
@@ -58,7 +65,10 @@ class BlackHole:
             # bother bridging the edit.
             return
 
-        await self.xmpp.bridge(self.discord.client, after, edited=True)
+        try:
+            await self.xmpp.bridge(self.discord.client, after, edited=True)
+        except Exception:
+            log.exception('failed to bridge an edit from discord to xmpp')
 
     def run(self):
         log.info('booting services')
