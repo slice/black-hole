@@ -121,11 +121,21 @@ class Discord:
         if len(content) > 1900:
             content = content[:1900] + "... (trimmed)"
 
+        # handle cases where the member's nick is too small for a
+        # webhook username
+        if len(nick) < 2:
+            nick = f"<{nick}>"
+
+        avatar = await self.resolve_avatar(member)
+
         payload = {
             "username": ensure_valid_nick(member.nick),
             "content": clean_content(content),
             "avatar_url": await self.resolve_avatar(member),
         }
+
+        if avatar is not None:
+            payload["avatar_url"] = str(avatar)
 
         log.debug("adding message to queue")
 
@@ -156,9 +166,10 @@ class Discord:
                     body = "<none>"
 
                 log.warning(
-                    "failed to bridge discord -> xmpp. status=%d, body=%r",
+                    "failed to bridge discord -> xmpp. status=%d, body=%r, payload=%r",
                     resp.status,
                     body,
+                    job["payload"],
                 )
 
         self._queue.clear()
