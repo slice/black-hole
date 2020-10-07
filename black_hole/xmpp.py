@@ -1,4 +1,4 @@
-__all__ = ['XMPP']
+__all__ = ["XMPP"]
 
 import asyncio
 import logging
@@ -12,11 +12,7 @@ from .room import Room
 
 log = logging.getLogger(__name__)
 
-FakeContext = namedtuple('FakeContext', (
-    'message',
-    'guild',
-    'bot'
-))
+FakeContext = namedtuple("FakeContext", ("message", "guild", "bot"))
 
 
 def extract_message_content(message: discord.Message) -> str:
@@ -24,12 +20,12 @@ def extract_message_content(message: discord.Message) -> str:
     base_content = message.system_content
 
     if message.attachments:
-        urls = ' '.join(attachment.proxy_url for attachment in message.attachments)
-        base_content += (' ' + urls)
+        urls = " ".join(attachment.proxy_url for attachment in message.attachments)
+        base_content += " " + urls
 
     if message.embeds:
-        s = '' if len(message.embeds) == 1 else 's'
-        base_content += f' ({len(message.embeds)} embed{s})'
+        s = "" if len(message.embeds) == 1 else "s"
+        base_content += f" ({len(message.embeds)} embed{s})"
 
     return base_content
 
@@ -49,12 +45,13 @@ async def format_discord_message(client, message: discord.Message) -> str:
     # present the user's discriminator in the forwarded message as well as the
     # username.
     presented_name = message.author.name
-    users = list(filter(lambda user: user.name == message.author.name,
-                        message.channel.members))
+    users = list(
+        filter(lambda user: user.name == message.author.name, message.channel.members)
+    )
     if len(users) > 1:
         presented_name = str(message.author)
 
-    return f'<{presented_name}> {content}'
+    return f"<{presented_name}> {content}"
 
 
 class XMPP:
@@ -85,7 +82,7 @@ class XMPP:
         This is automatically called when we connect to XMPP through
         :meth:`boot_xmpp`.
         """
-        rooms = self.config['rooms']
+        rooms = self.config["rooms"]
         for room_config in rooms:
             # Room needs a reference to self in order to call _handle_message
             room = Room(self, config=room_config)
@@ -94,35 +91,34 @@ class XMPP:
     async def bridge(self, client, message, *, edited=False):
         """Take a discord message and send it over to the MUC."""
         room = discord.utils.find(
-            lambda room: room['channel_id'] == message.channel.id,
-            self.config['rooms']
+            lambda room: room["channel_id"] == message.channel.id, self.config["rooms"]
         )
 
-        if not room or room.get('disabled', False):
+        if not room or room.get("disabled", False):
             return
 
-        if room.get('discord_log', False):
+        if room.get("discord_log", False):
             content = extract_message_content(message)
-            log.info('[discord] <%s> %s', message.author, content)
+            log.info("[discord] <%s> %s", message.author, content)
 
         reply = aioxmpp.Message(
             type_=aioxmpp.MessageType.GROUPCHAT,
-            to=aioxmpp.JID.fromstr(room['jid']),
+            to=aioxmpp.JID.fromstr(room["jid"]),
         )
 
         formatted_content = await format_discord_message(client, message)
 
         if edited:
-            formatted_content += ' (edited)'
+            formatted_content += " (edited)"
 
         reply.body[None] = formatted_content
         await self.client.send(reply)
 
     async def boot(self):
-        log.info('connecting to xmpp...')
+        log.info("connecting to xmpp...")
 
         async with self.client.connected() as stream:
-            log.debug('obtained stream: %s', stream)
+            log.debug("obtained stream: %s", stream)
 
             self.join_rooms()
 
