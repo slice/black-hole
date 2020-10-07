@@ -119,7 +119,7 @@ class Discord:
         # we use it (it will also be better updated
         # due to USER_UPDATE events)
         if user is not None:
-            return user.avatar_url_as(format="png")
+            return str(user.avatar_url_as(format="png"))
 
         return await self._get_from_cache(user_id)
 
