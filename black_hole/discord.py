@@ -7,7 +7,7 @@ from typing import Optional
 
 import aiohttp
 from discord.ext import commands
-from discord import DiscordException
+from discord import DiscordException, Intents
 
 from .management import Management
 from .utils import clean_content
@@ -33,7 +33,16 @@ class Discord:
 
     def __init__(self, *, config):
         self.config = config
-        self.client = commands.Bot(command_prefix=commands.when_mentioned)
+        intents = Intents.default()
+
+        # members intent is required to resolve discord.User/discord.Member
+        # on command parameters
+        intents.memebrs = True
+        intents.typing = False
+
+        self.client = commands.Bot(
+            intents=intents, command_prefix=commands.when_mentioned
+        )
         self.client.add_cog(Management(self.client, self.config))
         self.session = aiohttp.ClientSession(loop=self.client.loop)
 
