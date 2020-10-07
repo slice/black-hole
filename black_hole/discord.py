@@ -37,7 +37,7 @@ class Discord:
 
         # members intent is required to resolve discord.User/discord.Member
         # on command parameters
-        intents.memebrs = True
+        intents.members = True
         intents.typing = False
 
         self.client = commands.Bot(
