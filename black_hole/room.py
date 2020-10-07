@@ -1,4 +1,4 @@
-__all__ = ['Room']
+__all__ = ["Room"]
 
 import asyncio
 import logging
@@ -26,21 +26,19 @@ class Room:
 
         content = msg.body.any()
 
-        if self.config.get('log', False):
-            log.info('[%s] <%s> %s', self.config['jid'], member.direct_jid, content)
+        if self.config.get("log", False):
+            log.info("[%s] <%s> %s", self.config["jid"], member.direct_jid, content)
 
         # Sent the message over to our parent XMPP class.
-        self.loop.create_task(
-            self.xmpp._handle_message(self, msg, member, source)
-        )
+        self.loop.create_task(self.xmpp._handle_message(self, msg, member, source))
 
     def join(self, muc):
         """Joins this room from a :class:`aioxmpp.MUCClient` using the configuration."""
 
         room, _future = muc.join(
-            mucjid=aioxmpp.JID.fromstr(self.config['jid']),
-            nick=self.config.get('nick', 'black-hole'),
-            password=self.config.get('password'),
+            mucjid=aioxmpp.JID.fromstr(self.config["jid"]),
+            nick=self.config.get("nick", "black-hole"),
+            password=self.config.get("password"),
             history=aioxmpp.muc.xso.History(maxstanzas=0),
         )
 
