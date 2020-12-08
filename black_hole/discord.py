@@ -175,7 +175,8 @@ class Discord:
         log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
             # key used to store the message
-            store_key = (job["author_jid"], job["xmpp_message_id"])
+            xmpp_message_id: Optional[str] = job["xmpp_message_id"]
+            store_key = (job["author_jid"], xmpp_message_id)
 
             # key used to lookup the message (as the replace message has a different id,
             # using upstream_message_id directly would always yield non-hits to the
@@ -208,7 +209,8 @@ class Discord:
 
             if resp.status == 200:
                 discord_message = await resp.json()
-                self._message_id_store[store_key] = discord_message["id"]
+                if xmpp_message_id is not None:
+                    self._message_id_store[store_key] = discord_message["id"]
             else:
                 # by using wait=true, we basically force discord to always
                 # give us 200. this means 204's are considered an error
