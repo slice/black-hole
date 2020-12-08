@@ -185,14 +185,14 @@ class Discord:
             resp = None
 
             try:
-                try:
+                if lookup_key in self._message_id_store:
                     discord_message_id = self._message_id_store[lookup_key]
                     resp = await self.session.patch(
                         f"{webhook_url}/messages/{discord_message_id}",
                         json=job["payload"],
                         params={"wait": "true"},
                     )
-                except KeyError:
+                else:
                     resp = await self.session.post(
                         webhook_url, json=job["payload"], params={"wait": "true"}
                     )
