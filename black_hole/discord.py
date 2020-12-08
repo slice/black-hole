@@ -153,7 +153,7 @@ class Discord:
         log.debug("adding message to queue")
 
         # incoming messages that aren't edits have the attribute set to None
-        reply_message_id = (
+        lmc_message_id = (
             None if msg.xep0308_replace is None else msg.xep0308_replace.id_
         )
 
@@ -161,8 +161,8 @@ class Discord:
         self._queue.append(
             {
                 "author_jid": str(member.direct_jid),
-                "upstream_message_id": msg.id_,
-                "reply_message_id": reply_message_id,
+                "xmpp_message_id": msg.id_,
+                "xmpp_replaces_message_id": lmc_message_id,
                 "webhook_url": room.config["webhook"],
                 "payload": payload,
             }
@@ -175,12 +175,12 @@ class Discord:
         log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
             # key used to store the message
-            store_key = (job["author_jid"], job["upstream_message_id"])
+            store_key = (job["author_jid"], job["xmpp_message_id"])
 
-            # key used to lookup the message (as the reply message has a different id,
+            # key used to lookup the message (as the replace message has a different id,
             # using upstream_message_id directly would always yield non-hits to the
             # message id store)
-            lookup_key = (job["author_jid"], job["reply_message_id"])
+            lookup_key = (job["author_jid"], job["xmpp_replaces_message_id"])
             webhook_url = job["webhook_url"]
             resp = None
 
