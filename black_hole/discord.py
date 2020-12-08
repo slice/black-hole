@@ -8,6 +8,7 @@ from typing import Optional
 import aiohttp
 from discord.ext import commands
 from discord import DiscordException, Intents
+from expiringdict import ExpiringDict
 
 from .management import Management
 from .utils import clean_content
@@ -53,6 +54,19 @@ class Discord:
 
         #: { int: (timestamp, str) }
         self._avatar_cache = {}
+
+        #: { (jid, xmpp_message_id): discord_message_id }
+        # the message id store serves as a way for edited messages coming
+        # from a xmpp room to have the edit reflected on the discord channel.
+        #
+        # the high level overview is as follows:
+        #  when sending a message, check if its an edit and the edited id exists in the cache
+        #   if so, issue a patch (since we have the webhook url AND message id)
+        #   if not, issue a post, and store the message id for later
+        #
+        # the store has a maximum of 1k messages, and lets an xmpp message
+        # be last corrected for an hour
+        self._message_id_store = ExpiringDict(max_len=1000, max_age_seconds=3600)
 
     async def _get_from_cache(self, user_id: int) -> Optional[str]:
         """Get an avatar in cache."""
@@ -138,9 +152,16 @@ class Discord:
 
         log.debug("adding message to queue")
 
+        reply_message_id = (
+            None if msg.xep0308_replace is None else msg.xep0308_replace.id_
+        )
+
         # add this message to the queue
         self._queue.append(
             {
+                "author_jid": str(member.direct_jid),
+                "upstream_message_id": msg.id_,
+                "reply_message_id": reply_message_id,
                 "webhook_url": room.config["webhook"],
                 "payload": payload,
             }
@@ -152,13 +173,46 @@ class Discord:
         """Send all pending webhook messages."""
         log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
+            # key used to store the message
+            store_key = (job["author_jid"], job["upstream_message_id"])
+
+            # key used to lookup the message (as the reply message has a different id,
+            # using upstream_message_id directly would always yield non-hits to the
+            # message id store)
+            lookup_key = (job["author_jid"], job["reply_message_id"])
+            webhook_url = job["webhook_url"]
+            resp = None
+
             try:
-                resp = await self.session.post(job["webhook_url"], json=job["payload"])
-                await asyncio.sleep(self.config["discord"].get("delay", 0.25))
+                try:
+                    discord_message_id = self._message_id_store[lookup_key]
+                    resp = await self.session.patch(
+                        f"{webhook_url}/messages/{discord_message_id}",
+                        json=job["payload"],
+                        params={"wait": "true"},
+                    )
+                except KeyError:
+                    resp = await self.session.post(
+                        webhook_url, json=job["payload"], params={"wait": "true"}
+                    )
             except Exception:
                 log.exception("failed to bridge content")
 
-            if resp.status not in (200, 204):
+                # if we failed to bridge for any reason (not just the network)
+                # on this piece of code (even though the network is the most
+                # likely cause), we skip the job, and go to the next one.
+                continue
+
+            await asyncio.sleep(self.config["discord"].get("delay", 0.25))
+
+            if resp.status == 200:
+                discord_message = await resp.json()
+                self._message_id_store[store_key] = discord_message["id"]
+            else:
+                # by using wait=true, we basically force discord to always
+                # give us 200. this means 204's are considered an error
+                # condition
+
                 try:
                     body = await resp.read()
                 except Exception:
