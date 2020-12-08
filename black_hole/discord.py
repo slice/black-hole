@@ -153,7 +153,7 @@ class Discord:
         log.debug("adding message to queue")
 
         # incoming messages that aren't edits have the attribute set to None
-        lmc_message_id = (
+        original_xmpp_message_id = (
             None if msg.xep0308_replace is None else msg.xep0308_replace.id_
         )
 
@@ -162,7 +162,7 @@ class Discord:
             {
                 "author_jid": str(member.direct_jid),
                 "xmpp_message_id": msg.id_,
-                "xmpp_replaces_message_id": lmc_message_id,
+                "original_xmpp_message_id": original_xmpp_message_id,
                 "webhook_url": room.config["webhook"],
                 "payload": payload,
             }
@@ -174,19 +174,26 @@ class Discord:
         """Send all pending webhook messages."""
         log.debug("working on %d jobs...", len(self._queue))
         for job in self._queue:
-            # key used to store the message
             xmpp_message_id: Optional[str] = job["xmpp_message_id"]
+            original_xmpp_message_id: Optional[str] = job["original_xmpp_message_id"]
+
+            # key used to write to the store
             store_key = (job["author_jid"], xmpp_message_id)
 
             # key used to lookup the message (as the replace message has a different id,
             # using upstream_message_id directly would always yield non-hits to the
             # message id store)
-            lookup_key = (job["author_jid"], job["xmpp_replaces_message_id"])
+            lookup_key = (job["author_jid"], original_xmpp_message_id)
             webhook_url = job["webhook_url"]
             resp = None
 
             try:
-                if lookup_key in self._message_id_store:
+                # by checking if original id is none or not beforehand, we
+                # prevent unecessary lookups in the message store
+                if (
+                    original_xmpp_message_id is not None
+                    and lookup_key in self._message_id_store
+                ):
                     discord_message_id = self._message_id_store[lookup_key]
                     resp = await self.session.patch(
                         f"{webhook_url}/messages/{discord_message_id}",
@@ -205,6 +212,7 @@ class Discord:
                 # likely cause), we skip the job, and go to the next one.
                 continue
 
+            assert resp is not None
             await asyncio.sleep(self.config["discord"].get("delay", 0.25))
 
             if resp.status == 200:
