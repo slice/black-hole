@@ -152,11 +152,12 @@ class Discord:
 
         log.debug("adding message to queue")
 
+        # incoming messages that aren't edits have the attribute set to None
         reply_message_id = (
             None if msg.xep0308_replace is None else msg.xep0308_replace.id_
         )
 
-        # add this message to the queue
+        # add this message to the queue (processed later by _send_all)
         self._queue.append(
             {
                 "author_jid": str(member.direct_jid),
