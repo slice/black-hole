@@ -181,7 +181,7 @@ class Discord:
             store_key = (job["author_jid"], xmpp_message_id)
 
             # key used to lookup the message (as the replace message has a different id,
-            # using upstream_message_id directly would always yield non-hits to the
+            # using original_xmpp_message_id directly would always yield non-hits to the
             # message id store)
             lookup_key = (job["author_jid"], original_xmpp_message_id)
             webhook_url = job["webhook_url"]
