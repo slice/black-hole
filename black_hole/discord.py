@@ -98,7 +98,7 @@ class Discord:
                 return None
 
             # user found, store its avatar url in cache and return it
-            avatar_url = user.avatar_url_as(format="png")
+            avatar_url = str(user.avatar_url_as(format="png"))
             self._avatar_cache[user_id] = (invalidation_ts, avatar_url)
             return avatar_url
 
